@@ -1,0 +1,28 @@
+{
+  "name": "enssopcraft_serv",
+  "version": "1.0.0",
+  "description": "enssopcraft_serv",
+  "main": "app.js",
+  "dependencies": {
+    "connect": "^3.6.6",
+    "cookie-parser": "^1.4.4",
+    "express": "^4.16.4",
+    "session.socket.io": "^0.2.1",
+    "socket.io": "^2.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dunarr/multiplayer-socket-io-game.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dunarr/multiplayer-socket-io-game/issues"
+  },
+  "homepage": "https://github.com/dunarr/multiplayer-socket-io-game#readme"
+}
