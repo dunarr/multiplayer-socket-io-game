@@ -30,4 +30,4 @@ io.sockets.on('connection', function (socket) {
 
 
 
-server.listen(80,'gamesocket.dunarr.com');
+server.listen(8001,);
