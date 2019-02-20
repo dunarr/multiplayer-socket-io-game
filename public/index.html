@@ -208,19 +208,6 @@
   setInterval(setsprite, 300)
   setInterval(domove, 50)
 
-  //TODO
-
-  /* TODO permettre au cousin de Steve de poser des blocs de cobblestone (balises img) sous ses pieds
-   ----------------------------
-   Résoudre l'exercice en utilisant JavaScript et en ajoutant du code dans cette balise <script> uniquement.
-   En appuyant sur la barre espace : créer une nouvelle balise HTML à l'aide de la methode .createElement et positionner
-   ce nouvel élement sous le personnage (div ayant l'id character) :
-
-   Cours:
-   https://developer.mozilla.org/en-US/docs/Web/API/Document/createElement
-   https://www.w3schools.com/jsref/met_document_createelement.asp
-   https://openclassrooms.com/fr/courses/1916641-dynamisez-vos-sites-web-avec-javascript/1918600-manipuler-le-code-html-partie-2-2#/id/r-1924593
-    */
   function createBlock (x, y, id) {
     var perso = document.getElementById('character')
     var block = document.createElement('img')
@@ -272,6 +259,12 @@
   }
 
   socket.on('new_user', function (message) {
+    console.log(message)
+    console.log(pseudo)
+    if (pseudo === message){
+      console.log('hey it\'s me !!')
+      socket.emit('me', true)
+    }
     create_user(message, 0, 0)
   })
   socket.on('user_moove', function (message) {
@@ -303,7 +296,7 @@
       if (event.deltaY < 0) {
         selectBlock(blockId + 1)
       } else {
-        selectBlock(blockId + 1)
+        selectBlock(blockId - 1)
       }
     })
   var blockBar = document.getElementById('blockBar')
@@ -320,6 +313,9 @@
     blockId = id
     if (blockId >= blocks.length) {
       blockId = 0
+    }
+    if (blockId < 0) {
+      blockId = blocks.length - 1
     }
     while (blockBar.firstChild) {
       blockBar.removeChild(blockBar.firstChild)
