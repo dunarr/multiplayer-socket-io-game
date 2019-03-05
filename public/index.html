@@ -445,7 +445,7 @@ getUsers.onreadystatechange = function () {
     var response = JSON.parse(this.response);
     document.getElementById('autocomplete').innerHTML = ""
 
-    response.filter(e => e.username.toLowerCase().match('.*' + document.getElementById('messageInput').value.substring(1).toLowerCase() + '.*')).slice(0, 5).forEach(
+    response.filter(e => e.username.toLowerCase().match('.*' + document.getElementById('messageInput').value.substring(1).toLowerCase() + '.*')).forEach(
       e => {
         document.getElementById('autocomplete').classList.add('open')
         setTimeout(function () {
