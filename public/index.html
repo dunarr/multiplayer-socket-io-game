@@ -430,7 +430,7 @@ getUsers.onreadystatechange = function () {
         user.innerText = e.username;
         user.addEventListener('click', function () {
           document.getElementById('autocomplete').classList.remove('open')
-          document.getElementById('messageInput').value = '/' + e.username
+          document.getElementById('messageInput').value = '@' + e.username
         })
         document.getElementById('autocomplete').append(user)
       }
@@ -445,7 +445,8 @@ document.getElementById('messageInput').addEventListener('keydown', function (ev
       sendPM.send()
 
     }
-    if (document.getElementById('messageInput').value[0] === '/') {
+    if (document.getElementById('messageInput').value[0] === '@' || event.key === '@') {
+      console.log('lol');
       getUsers.open('POST', 'https://api.messenger.codecolliders.com/getUsers');
       getUsers.send()
 
@@ -457,20 +458,21 @@ sendPM.onreadystatechange = function () {
   if (this.readyState == 4 && this.status == 200) {
     var response = JSON.parse(this.response);
     document.getElementById('autocomplete').innerHTML = ""
-
-    var to = response.filter(e => document.getElementById('messageInput').value.substring(1).toLowerCase().match(e.username.toLowerCase() + '.*'))
-    console.log(to);
-    if (to.length === 1) {
-      var id = to[0].id
-      var msg = document.getElementById('messageInput').value.substr(to[0].username.length + 1)
-      sendMessageAction(id, msg)
-    } else if (to.length === 0) {
-      var id = 0
-      var msg = document.getElementById('messageInput').value
+    var id = 0
+    var msg = document.getElementById('messageInput').value
+    if(document.getElementById('messageInput').value[0] ==='@'){
+      var to = response.filter(e => document.getElementById('messageInput').value.substring(1).toLowerCase().match(e.username.toLowerCase() + '.*'))
+      console.log(to);
+      if (to.length === 1) {
+        id = to[0].id
+        msg = document.getElementById('messageInput').value.substr(to[0].username.length + 1)
+        sendMessageAction(id, msg)
+      }
+    } else {
       sendMessageAction(id, msg)
     }
     document.getElementById('messageInput').value = ''
-
+    getMessages()
     // setCookie('user', response.authKey)
     // setCookie('uid', response.id)
   }
@@ -480,6 +482,7 @@ function sendMessageAction (to, msg) {
   var user = getCookie('user');
 
   if (user !== '') {
+    document.getElementById('autocomplete').classList.remove('open')
     sendMessage.open('POST', 'https://api.messenger.codecolliders.com/sendMessage');
     var formData = new FormData();
     formData.append('authKey', user);
@@ -487,7 +490,6 @@ function sendMessageAction (to, msg) {
     formData.append('to', to);
     sendMessage.send(formData)
   }
-  getMessages()
 }
 
 var getMessagesReq = new XMLHttpRequest();
