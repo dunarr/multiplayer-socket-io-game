@@ -8,77 +8,159 @@
   <title>Document</title>
 
   <style>
-    body > img {
-      width: 100px;
-      height: 100px;
-      position: absolute;
-    }
+  body > img {
+    width: 100px;
+    height: 100px;
+    position: absolute;
+  }
 
-    html, body {
-      overflow: hidden;
-      margin: 0;
-      height: 100%;
-      background-size: 100px;
-      background-image: url("img/grass.jpg");
-    }
+  html, body {
+    overflow: hidden;
+    margin: 0;
+    height: 100%;
+    background-size: 100px;
+    background-image: url("img/grass.jpg");
+  }
 
-    .player {
-      z-index: 1;
-      background-position-y: -15px;
-      width: 200px;
-      height: 230px;
-      background-image: url("img/sprite2.png");
-      background-size: 700px;
-      position: absolute;
-    }
+  .player {
+    z-index: 1;
+    background-position-y: -15px;
+    width: 200px;
+    height: 230px;
+    background-image: url("img/sprite2.png");
+    background-size: 700px;
+    position: absolute;
+  }
 
-    .player:after {
-      content: attr(id);
-      color: yellow;
-      font-family: monospace;
-      left: 50%;
-      position: absolute;
-      transform: translateX(-50%);
-      font-size: 25px;
-      margin-top: -35px;
-      background-color: rgba(0,0,0,0.4);
-      padding: 7px;
-    }
+  .player:after {
+    content: attr(id);
+    color: yellow;
+    font-family: monospace;
+    left: 50%;
+    position: absolute;
+    transform: translateX(-50%);
+    font-size: 25px;
+    margin-top: -35px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 7px;
+  }
 
-    #character {
-      background-image: url("img/sprite.png");
-      z-index: 2;
-    }
+  #character {
+    background-image: url("img/sprite.png");
+    z-index: 2;
+  }
 
-    #character:after {
-      color: #4ba3e6;
-      content: attr(data-name);
-    }
+  #character:after {
+    color: #4ba3e6;
+    content: attr(data-name);
+  }
 
-    #blockBar {
-      z-index: 3;
-      position: fixed;
-      width: auto;
-      bottom: 10px;
-      height: 65px;
-      background-color: gray;
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 5px;
-      border-radius: 5px;
-      box-shadow: 4px 4px 20px -5px black;
-    }
+  #blockBar {
+    z-index: 3;
+    position: fixed;
+    width: auto;
+    bottom: 10px;
+    height: 65px;
+    background-color: gray;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px;
+    border-radius: 5px;
+    box-shadow: 4px 4px 20px -5px black;
+  }
 
-    #blockBar img {
-      height: 100%;
-      border: 5px solid grey;
-      box-sizing: border-box;
-    }
+  #blockBar img {
+    height: 100%;
+    border: 5px solid grey;
+    box-sizing: border-box;
+  }
 
-    #blockBar img.active {
-      border-color: red;
-    }
+  #blockBar img.active {
+    border-color: red;
+  }
 
+  #prompt {
+    position: absolute;
+    z-index: 4;
+    left: 50%;
+    top: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    width: 400px;
+    height: 200px;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, .3);
+    display: none;
+  }
+
+  #prompt.active {
+    display: flex;
+  }
+
+  #chat {
+    font-family: monospace;
+    color: white;
+    position: fixed;
+    right: 20px;
+    top: 20px;
+    width: 300px;
+  }
+
+  #messageInput {
+    padding: 10px;
+    color: white;
+    width: 100%;
+    background-color: rgba(0, 0, 0, .5);
+    border: 1px solid black;
+    box-sizing: border-box;
+  }
+
+  #chat .me {
+    color: #ffff00;
+  }
+
+  #chat .private {
+    color: #4fa7ff;
+  }
+
+  #chat .private.me {
+    color: #1dff41;
+  }
+
+  #chat .from {
+    margin-right: 5px;
+    float: left;
+  }
+
+  #messageList {
+    background-color: rgba(0, 0, 0, .3);
+
+    opacity: 0;
+    transition: opacity .5s;
+    padding: 10px;
+    max-height: 50%;
+    overflow: auto;
+  }
+
+  #messageList.open, #messageInput:focus ~ #messageList {
+    opacity: 1;
+  }
+
+  #autocomplete {
+    display: none;
+    position: absolute;
+    z-index: 5;
+    background-color: black;
+    cursor: pointer;
+  }
+
+  #autocomplete div {
+    padding: 5px;
+  }
+
+  #autocomplete.open {
+    display: block;
+  }
   </style>
 </head>
 <body id="page">
@@ -91,249 +173,465 @@
   <img src="img/cobble.png" alt="">
   <img src="img/cobble.png" alt="">
 </div>
-
+<div id="prompt">
+  <input placeholder="entrez un pseudo" id="prompt_input" type="text">
+</div>
+<div id="chat">
+  <input autocomplete="off" type="text" id="messageInput">
+  <div id="autocomplete"></div>
+  <div id="messageList"></div>
+</div>
 <script src="http://gamesocket.dunarr.com/socket.io/socket.io.js"></script>
 
 <script>
-  var socket = io.connect('http://gamesocket.dunarr.com')
+var electron = false
 
-  body = document.getElementById('page')
-  isleft = false
-  isright = false
-  isup = false
-  isdown = false
-  posX = 0
-  posY = 0
-  body.addEventListener('keydown', move)
-  body.addEventListener('keyup', unmove)
-  spritestate = 0
-  var pseudo
-
-  function unmove (e) {
-    if (e.key === 'd') {
-      isright = false
-    }
-    if (e.key === 'q') {
-      isleft = false
-    }
-    if (e.key === 'z') {
-      isup = false
-    }
-    if (e.key === 's') {
-      isdown = false
-    }
-    if (!isright && !isleft && !isup && !isdown) {
-      document.getElementById('character').setAttribute('data-mooving', false)
-    }
+try {
+  electron = require('electron');
+  if  (electron)
+    electron = {}
+} catch (e) {
+  electron = false
+}
+function setCookie (name, data) {
+  if (electron) {
+    electron[name] = data
+  } else {
+    var d = new Date();
+    d.setTime(d.getTime() + (10 * 24 * 60 * 60 * 1000));
+    var expires = "expires=" + d.toUTCString();
+    document.cookie = name + "=" + data + ";" + expires + ";path=/";
   }
+}
 
-  function move (e) {
-    var player = document.getElementById('character')
-    if (e.key === 'd') {
-      document.getElementById('character').setAttribute('data-mooving', true)
+function getCookie (cname) {
+  if (electron) {
+ return electron[cname]?electron[cname]:''
+  } else {
+    var name = cname + "=";
+    var decodedCookie = decodeURIComponent(document.cookie);
+    var ca = decodedCookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+      var c = ca[i];
+      while (c.charAt(0) == ' ') {
+        c = c.substring(1);
+      }
+      if (c.indexOf(name) == 0) {
+        return c.substring(name.length, c.length);
+      }
+    }
+    return "";
+  }
+}
+
+var socket = io.connect('http://gamesocket.dunarr.com');
+var createUser = new XMLHttpRequest();
+createUser.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var response = JSON.parse(this.response);
+    setCookie('user', response.authKey)
+    setCookie('uid', response.id)
+  }
+};
+createUser.open('POST', 'https://api.messenger.codecolliders.com/createUser');
+if (getCookie('user') === '') {
+  createUser.send()
+}
+var lastMessage = 0
+body = document.getElementById('page');
+isleft = false;
+isright = false;
+isup = false;
+isdown = false;
+posX = 0;
+posY = 0;
+body.addEventListener('keydown', move);
+body.addEventListener('keyup', unmove);
+spritestate = 0;
+var pseudo = null;
+var chatUsers = [];
+var usersRequest = new XMLHttpRequest();
+usersRequest.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var response = JSON.parse(this.response);
+    chatUsers = response
+  }
+};
+usersRequest.open('GET', 'https://api.messenger.codecolliders.com/getUsers');
+
+function unmove (e) {
+  if (e.key === 'ArrowRight') {
+    isright = false
+  }
+  if (e.key === 'ArrowLeft') {
+    isleft = false
+  }
+  if (e.key === 'ArrowUp') {
+    isup = false
+  }
+  if (e.key === 'ArrowDown') {
+    isdown = false
+  }
+  if (!isright && !isleft && !isup && !isdown) {
+    document.getElementById('character').setAttribute('data-mooving', false)
+  }
+}
+
+function move (e) {
+  if (e.target.nodeName !== 'INPUT') {
+    var player = document.getElementById('character');
+    if (e.key === 'ArrowRight') {
+      document.getElementById('character').setAttribute('data-mooving', true);
       isright = true
     }
-    if (e.key === 'q') {
-      document.getElementById('character').setAttribute('data-mooving', true)
+    if (e.key === 'ArrowLeft') {
+      document.getElementById('character').setAttribute('data-mooving', true);
       isleft = true
     }
-    if (e.key === 'z') {
-      document.getElementById('character').setAttribute('data-mooving', true)
+    if (e.key === 'ArrowUp') {
+      document.getElementById('character').setAttribute('data-mooving', true);
       isup = true
     }
-    if (e.key === 's') {
-      document.getElementById('character').setAttribute('data-mooving', true)
-      mooving = 1
+    if (e.key === 'ArrowDown') {
+      document.getElementById('character').setAttribute('data-mooving', true);
+      mooving = 1;
       isdown = true
     }
   }
+}
 
-  function setsprite () {
-    spritestate++
-    if (spritestate >= 4) {
-      spritestate = 0
+function setsprite () {
+  spritestate++;
+  if (spritestate >= 4) {
+    spritestate = 0
+  }
+  var characters = document.getElementsByClassName('player');
+  for (let i = 0; i < characters.length; i++) {
+    if (spritestate === 0 || spritestate === 2 || characters[i].getAttribute('data-mooving') === 'false') {
+      characters[i].style.height = '230px';
+      characters[i].style.backgroundPositionY = '-15px'
     }
-    var characters = document.getElementsByClassName('player')
-    for (let i = 0; i < characters.length; i++) {
-      if (spritestate === 0 || spritestate === 2 || characters[i].getAttribute('data-mooving') === 'false') {
-        characters[i].style.height = '230px'
-        characters[i].style.backgroundPositionY = '-15px'
-      }
-      if (spritestate === 1 && characters[i].getAttribute('data-mooving') === 'true') {
-        characters[i].style.height = '230px'
-        characters[i].style.backgroundPositionY = '250px'
-      }
-      if (spritestate === 3 && characters[i].getAttribute('data-mooving') === 'true') {
-        characters[i].style.backgroundPositionY = '445px'
-        characters[i].style.height = '210px'
-      }
+    if (spritestate === 1 && characters[i].getAttribute('data-mooving') === 'true') {
+      characters[i].style.height = '230px';
+      characters[i].style.backgroundPositionY = '250px'
+    }
+    if (spritestate === 3 && characters[i].getAttribute('data-mooving') === 'true') {
+      characters[i].style.backgroundPositionY = '445px';
+      characters[i].style.height = '210px'
     }
   }
+}
 
-  function domove () {
-    var character = document.getElementById('character')
-    if (isright) {
-      character.style.backgroundPositionX = '365px'
-      posX += 10
-      character.style.left = posX + 'px'
-    }
-    if (isleft) {
-      character.style.backgroundPositionX = '0px'
-      posX -= 10
-      character.style.left = posX + 'px'
-    }
-    if (isup) {
-      character.style.backgroundPositionX = '200px'
-      posY -= 10
-      character.style.top = posY + 'px'
-    }
-    if (isdown) {
-      character.style.backgroundPositionX = '530px'
-      posY += 10
-      character.style.top = posY + 'px'
-    }
-    if (pseudo)
-      socket.emit('update_pos', {
-        pseudo: pseudo,
-        mooving: character.getAttribute('data-mooving'),
-        posX: posX,
-        posY: posY,
-        isright: isright,
-        isleft: isleft,
-        isup: isup,
-        isdown: isdown,
-      })
+function domove () {
+  var character = document.getElementById('character');
+  if (isright) {
+    character.style.backgroundPositionX = '365px';
+    posX += 10;
+    character.style.left = posX + 'px'
   }
-
-  setInterval(setsprite, 300)
-  setInterval(domove, 50)
-
-  function createBlock (x, y, id) {
-    var perso = document.getElementById('character')
-    var block = document.createElement('img')
-    block.src = 'img/' + blocks[id]
-    block.style.left = x * 100 + 'px'
-    block.style.top = y * 100 + 'px'
-    var body = document.getElementById('page')
-    body.appendChild(block)
+  if (isleft) {
+    character.style.backgroundPositionX = '0px';
+    posX -= 10;
+    character.style.left = posX + 'px'
   }
+  if (isup) {
+    character.style.backgroundPositionX = '200px';
+    posY -= 10;
+    character.style.top = posY + 'px'
+  }
+  if (isdown) {
+    character.style.backgroundPositionX = '530px';
+    posY += 10;
+    character.style.top = posY + 'px'
+  }
+  if (pseudo)
+    socket.emit('update_pos', {
+      pseudo: pseudo,
+      mooving: character.getAttribute('data-mooving'),
+      posX: posX,
+      posY: posY,
+      isright: isright,
+      isleft: isleft,
+      isup: isup,
+      isdown: isdown,
+    })
+}
 
-  document.getElementById('page').addEventListener('keydown',
-    function (event) {
+setInterval(setsprite, 300);
+setInterval(domove, 50);
+
+function createBlock (x, y, id) {
+  var perso = document.getElementById('character');
+  var block = document.createElement('img');
+  block.src = 'img/' + blocks[id];
+  block.style.left = x * 100 + 'px';
+  block.style.top = y * 100 + 'px';
+  var body = document.getElementById('page');
+  body.appendChild(block)
+}
+
+document.getElementById('page').addEventListener('keydown',
+  function (event) {
+    if (event.target.nodeName !== 'INPUT') {
+
       if (event.keyCode === 32) {
-        var x = Math.floor((posX + 100) / 100)
-        var y = Math.floor((posY + 200) / 100)
-        var id = blockId
+        var x = Math.floor((posX + 100) / 100);
+        var y = Math.floor((posY + 200) / 100);
+        var id = blockId;
         if (pseudo)
-          socket.emit('create_block', { x: x, y: y, id: id })
+          socket.emit('create_block', {x: x, y: y, id: id});
         createBlock(x, y, id)
       }
-    })
-  socket.on('created_block', function (message) {
-    createBlock(message.x, message.y, message.id)
-  })
-  socket.on('connect_message', function (message) {
-    pseudo = null;
-    while (!pseudo)
-      pseudo = prompt(message)
-    document.getElementById('character').setAttribute('data-name', pseudo)
-    if (pseudo)
-      socket.emit('login', pseudo)
-  })
-  socket.on('user_quit', function (message) {
-    document.getElementById(message).remove()
-  })
+    }
+  });
+socket.on('created_block', function (message) {
+  createBlock(message.x, message.y, message.id)
+});
 
-  function create_user (pseudo, x, y) {
-    var player = document.getElementById(pseudo)
-    if (!player) {
-      var perso = document.createElement('div')
-      perso.classList.add('player')
-      perso.id = pseudo
-      perso.style.left = x
-      perso.style.top = y
-      perso.setAttribute('data-mooving', false)
-      var body = document.getElementById('page')
-      body.appendChild(perso)
+socket.on('connect_message', function (message) {
+  pseudo = null;
+  document.getElementById('prompt').classList.add('active')
+});
+var setUsername = new XMLHttpRequest();
+
+setUsername.open('POST', 'https://api.messenger.codecolliders.com/changeUsername');
+document.getElementById('prompt_input').addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') {
+    pseudo = document.getElementById('prompt_input').value;
+    document.getElementById('character').setAttribute('data-name', pseudo);
+    document.getElementById('prompt').classList.remove('active');
+    socket.emit('login', pseudo);
+    var formData = new FormData();
+    formData.append('authKey', getCookie('user'));
+    formData.append('username', pseudo);
+    setUsername.send(formData)
+  }
+});
+var sendMessage = new XMLHttpRequest();
+sendMessage.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var response = JSON.parse(this.response);
+  }
+};
+
+var getUsers = new XMLHttpRequest();
+getUsers.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var response = JSON.parse(this.response);
+    document.getElementById('autocomplete').innerHTML = ""
+
+    response.filter(e => e.username.toLowerCase().match('.*' + document.getElementById('messageInput').value.substring(1).toLowerCase() + '.*')).slice(0, 5).forEach(
+      e => {
+        document.getElementById('autocomplete').classList.add('open')
+        setTimeout(function () {
+          document.getElementById('autocomplete').classList.remove('open')
+        }, 5000)
+        var user = document.createElement('div')
+        user.innerText = e.username;
+        user.addEventListener('click', function () {
+          document.getElementById('autocomplete').classList.remove('open')
+          document.getElementById('messageInput').value = '/' + e.username
+        })
+        document.getElementById('autocomplete').append(user)
+      }
+    )
+    // setCookie('user', response.authKey)
+    // setCookie('uid', response.id)
+  }
+};
+document.getElementById('messageInput').addEventListener('keydown', function (event) {
+    if (event.key === 'Enter') {
+      sendPM.open('POST', 'https://api.messenger.codecolliders.com/getUsers');
+      sendPM.send()
+
+    }
+    if (document.getElementById('messageInput').value[0] === '/') {
+      getUsers.open('POST', 'https://api.messenger.codecolliders.com/getUsers');
+      getUsers.send()
+
     }
   }
+);
+var sendPM = new XMLHttpRequest();
+sendPM.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var response = JSON.parse(this.response);
+    document.getElementById('autocomplete').innerHTML = ""
 
-  socket.on('new_user', function (message) {
-    console.log(message)
-    console.log(pseudo)
-    if (pseudo === message){
-      console.log('hey it\'s me !!')
-      socket.emit('me', true)
+    var to = response.filter(e => document.getElementById('messageInput').value.substring(1).toLowerCase().match(e.username.toLowerCase() + '.*'))
+    console.log(to);
+    if (to.length === 1) {
+      var id = to[0].id
+      var msg = document.getElementById('messageInput').value.substr(to[0].username.length + 1)
+      sendMessageAction(id, msg)
+    } else if (to.length === 0) {
+      var id = 0
+      var msg = document.getElementById('messageInput').value
+      sendMessageAction(id, msg)
     }
-    create_user(message, 0, 0)
-  })
-  socket.on('user_moove', function (message) {
-    userMoove(message.pseudo, message.posX, message.posY, message.mooving, message.isleft, message.isright, message.isup, message.isdown)
-  })
+    document.getElementById('messageInput').value = ''
 
-  function userMoove (id, posX, posY, mooving, isLeft, isRight, isUp, isDown) {
-
-    var player = document.getElementById(id)
-    if (player) {
-      if (isRight)
-        player.style.backgroundPositionX = '365px'
-      if (isLeft)
-        player.style.backgroundPositionX = '0px'
-      if (isUp)
-        player.style.backgroundPositionX = '200px'
-      if (isDown)
-        player.style.backgroundPositionX = '530px'
-      player.setAttribute('data-mooving', mooving)
-      player.style.top = posY + 'px'
-      player.style.left = posX + 'px'
-    } else {
-      create_user(id, posX, posY)
-    }
+    // setCookie('user', response.authKey)
+    // setCookie('uid', response.id)
   }
+};
 
-  document.getElementById('page').addEventListener('wheel',
-    function (event) {
+function sendMessageAction (to, msg) {
+  var user = getCookie('user');
+
+  if (user !== '') {
+    sendMessage.open('POST', 'https://api.messenger.codecolliders.com/sendMessage');
+    var formData = new FormData();
+    formData.append('authKey', user);
+    formData.append('text', msg);
+    formData.append('to', to);
+    sendMessage.send(formData)
+  }
+  getMessages()
+}
+
+var getMessagesReq = new XMLHttpRequest();
+getMessagesReq.onreadystatechange = function () {
+  if (this.readyState == 4 && this.status == 200) {
+    var response = JSON.parse(this.response);
+    response.forEach(e => {
+        var msg = document.createElement('div')
+        msg.classList.add('message');
+        if (e.from.id === parseInt(getCookie('uid'))) {
+          msg.classList.add('me');
+        }
+        if (e.to !== 0) {
+          msg.classList.add('private');
+        }
+        var fromuser = document.createElement('div')
+        fromuser.classList.add('from')
+        fromuser.innerText = e.from.username + ':'
+        msg.append(fromuser)
+        msg.innerHTML += e.text
+        document.getElementById('messageList').append(msg)
+        lastMessage = e.id
+        document.getElementById('messageList').classList.add('open')
+        setTimeout(function () {
+          document.getElementById('messageList').classList.remove('open')
+        }, 10000)
+        document.getElementById('messageList').scrollTo(0, document.getElementById('messageList').scrollHeight);
+
+      }
+    )
+  }
+};
+
+setInterval(getMessages, 5000)
+
+function getMessages () {
+  var user = getCookie('user');
+
+  if (user !== '') {
+    getMessagesReq.open('POST', 'https://api.messenger.codecolliders.com/getMessages');
+    var formData = new FormData();
+    formData.append('authKey', user);
+    formData.append('lastId', lastMessage);
+    getMessagesReq.send(formData)
+  }
+}
+
+socket.on('user_quit', function (message) {
+  console.log(message);
+  document.getElementById(message).remove()
+});
+
+function create_user (pseudo, x, y) {
+  var player = document.getElementById(pseudo);
+  if (!player) {
+    var perso = document.createElement('div');
+    perso.classList.add('player');
+    perso.id = pseudo;
+    perso.style.left = x;
+    perso.style.top = y;
+    perso.setAttribute('data-mooving', false);
+    var body = document.getElementById('page');
+    body.appendChild(perso)
+  }
+}
+
+socket.on('new_user', function (message) {
+  console.log(message);
+  console.log(pseudo);
+  if (pseudo === message) {
+    console.log('hey it\'s me !!');
+    socket.emit('me', true)
+  }
+  create_user(message, 0, 0)
+});
+socket.on('user_moove', function (message) {
+  userMoove(message.pseudo, message.posX, message.posY, message.mooving, message.isleft, message.isright, message.isup, message.isdown)
+});
+
+function userMoove (id, posX, posY, mooving, isLeft, isRight, isUp, isDown) {
+
+  var player = document.getElementById(id);
+  if (player) {
+    if (isRight)
+      player.style.backgroundPositionX = '365px';
+    if (isLeft)
+      player.style.backgroundPositionX = '0px';
+    if (isUp)
+      player.style.backgroundPositionX = '200px';
+    if (isDown)
+      player.style.backgroundPositionX = '530px';
+    player.setAttribute('data-mooving', mooving);
+    player.style.top = posY + 'px';
+    player.style.left = posX + 'px'
+  } else {
+    create_user(id, posX, posY)
+  }
+}
+
+document.getElementById('page').addEventListener('wheel',
+  function (event) {
+    if (!document.getElementById('chat').contains(event.target)) {
       if (event.deltaY < 0) {
         selectBlock(blockId + 1)
       } else {
         selectBlock(blockId - 1)
       }
-    })
-  var blockBar = document.getElementById('blockBar')
-  var blocks = [
-    'cobble.png',
-    'sand.jpg',
-    'stone.png',
-    'water.jpg',
-    'grass.jpg'
-  ]
-  var blockId = 0
+    }
+  });
+var blockBar = document.getElementById('blockBar');
+var blocks = [
+  'cobble.png',
+  'sand.jpg',
+  'stone.png',
+  'water.jpg',
+  'grass.jpg'
+];
+var blockId = 0;
 
-  function selectBlock (id) {
-    blockId = id
-    if (blockId >= blocks.length) {
-      blockId = 0
-    }
-    if (blockId < 0) {
-      blockId = blocks.length - 1
-    }
-    while (blockBar.firstChild) {
-      blockBar.removeChild(blockBar.firstChild)
-    }
-    for (let i = 0; i < blocks.length; i++) {
-      var img = document.createElement('img')
-      img.src = 'img/' + blocks[i]
-      img.addEventListener('click', function () {
-        selectBlock(i)
-      })
-      if (blockId === i) {
-        img.classList.add('active')
-      }
-      blockBar.appendChild(img)
-    }
+function selectBlock (id) {
+  blockId = id;
+  if (blockId >= blocks.length) {
+    blockId = 0
   }
+  if (blockId < 0) {
+    blockId = blocks.length - 1
+  }
+  while (blockBar.firstChild) {
+    blockBar.removeChild(blockBar.firstChild)
+  }
+  for (let i = 0; i < blocks.length; i++) {
+    var img = document.createElement('img');
+    img.src = 'img/' + blocks[i];
+    img.addEventListener('click', function () {
+      selectBlock(i)
+    });
+    if (blockId === i) {
+      img.classList.add('active')
+    }
+    blockBar.appendChild(img)
+  }
+}
 
-  selectBlock(0)
+selectBlock(0)
 
 </script>
 
