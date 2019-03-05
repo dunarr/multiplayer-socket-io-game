@@ -114,7 +114,9 @@
     border: 1px solid black;
     box-sizing: border-box;
   }
-
+  #chat .message{
+    margin: 5px 0;
+  }
   #chat .me {
     color: #ffff00;
   }
@@ -208,7 +210,7 @@ function setCookie (name, data) {
 
 function getCookie (cname) {
   if (electron) {
- return electron[cname]?electron[cname]:''
+    return electron[cname]?electron[cname]:''
   } else {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
