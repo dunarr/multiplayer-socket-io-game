@@ -264,16 +264,16 @@ usersRequest.onreadystatechange = function () {
 usersRequest.open('GET', 'https://api.messenger.codecolliders.com/getUsers');
 
 function unmove (e) {
-  if (e.key === 'ArrowRight') {
+  if (e.key === 'd') {
     isright = false
   }
-  if (e.key === 'ArrowLeft') {
+  if (e.key === 'q') {
     isleft = false
   }
-  if (e.key === 'ArrowUp') {
+  if (e.key === 'z') {
     isup = false
   }
-  if (e.key === 'ArrowDown') {
+  if (e.key === 's') {
     isdown = false
   }
   if (!isright && !isleft && !isup && !isdown) {
@@ -284,19 +284,19 @@ function unmove (e) {
 function move (e) {
   if (e.target.nodeName !== 'INPUT') {
     var player = document.getElementById('character');
-    if (e.key === 'ArrowRight') {
+    if (e.key === 'd') {
       document.getElementById('character').setAttribute('data-mooving', true);
       isright = true
     }
-    if (e.key === 'ArrowLeft') {
+    if (e.key === 'q') {
       document.getElementById('character').setAttribute('data-mooving', true);
       isleft = true
     }
-    if (e.key === 'ArrowUp') {
+    if (e.key === 'z') {
       document.getElementById('character').setAttribute('data-mooving', true);
       isup = true
     }
-    if (e.key === 'ArrowDown') {
+    if (e.key === 's') {
       document.getElementById('character').setAttribute('data-mooving', true);
       mooving = 1;
       isdown = true
