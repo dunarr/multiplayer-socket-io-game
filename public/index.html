@@ -210,7 +210,7 @@ function setCookie (name, data) {
 
 function getCookie (cname) {
   if (electron) {
-    return electron[cname]?electron[cname]:''
+ return electron[cname]?electron[cname]:''
   } else {
     var name = cname + "=";
     var decodedCookie = decodeURIComponent(document.cookie);
@@ -609,7 +609,8 @@ var blocks = [
   'sand.jpg',
   'stone.png',
   'water.jpg',
-  'grass.jpg'
+  'grass.jpg',
+  'annoying.png'
 ];
 var blockId = 0;
 
