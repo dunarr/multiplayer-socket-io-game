@@ -213,7 +213,7 @@
   <div id="autocomplete"></div>
   <div id="messageList"></div>
 </div>
-<script src="http://gamesocket.dunarr.com/socket.io/socket.io.js"></script>
+<script src="https://gamesocket.dunarr.com/socket.io/socket.io.js"></script>
 
 <script>
 var electron = false
@@ -256,7 +256,7 @@ function getCookie (cname) {
   }
 }
 
-var socket = io.connect('http://gamesocket.dunarr.com');
+var socket = io.connect('https://gamesocket.dunarr.com');
 var createUser = new XMLHttpRequest();
 createUser.onreadystatechange = function () {
   if (this.readyState == 4 && this.status == 200) {
